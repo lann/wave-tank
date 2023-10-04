@@ -15,7 +15,7 @@ hello-world(false, some("World")) -> "Hello, World!"
 
 ```console
 $ cargo run -- example.wasm --complete hello
-hello
+hello-world
 $ cargo run -- example.wasm --complete 'hello-world('
 hello-world(true
 hello-world(false
