@@ -31,13 +31,21 @@ fn main() -> anyhow::Result<()> {
         .context("func expr must be valid unicode")?
         .to_string();
 
-    if !std::env::var_os("DEBUG_COMPLETE")
-        .unwrap_or_default()
-        .is_empty()
-    {
+    if call_expr_str == "--complete" {
+        let expr = args
+            .next()
+            .context("--complete <expr>")?
+            .to_str()
+            .context("invalid --complete <expr>")?
+            .to_string();
+        let call_expr_str = expr.trim_matches(|c| c == '\'' || c == '"');
         let completer = WasmCompleter::new(wasm_path)?;
-        let completions = completer.complete(&call_expr_str)?;
-        completions.iter().for_each(|c| println!("{c}"));
+        for comp in completer.complete(call_expr_str)? {
+            println!(
+                "{}",
+                expr.replace(call_expr_str, &format!("{call_expr_str}{comp}"))
+            );
+        }
         std::process::exit(0);
     }
 
@@ -179,11 +187,11 @@ impl WasmCompleter {
             .values()
             .filter_map(move |item| {
                 if let WorldItem::Function(func) = item {
-                    if func.name.starts_with(partial_name) {
+                    if let Some(comp) = func.name.strip_prefix(partial_name) {
                         if func.name == partial_name {
-                            return Some(format!("{}(", func.name));
+                            return Some(format!("{comp}("));
                         } else {
-                            return Some(func.name.to_string());
+                            return Some(comp.to_string());
                         }
                     }
                 }
@@ -208,9 +216,6 @@ impl WasmCompleter {
         let func_type = resolve_wit_func_type(&self.resolve, func)?;
         let completions =
             params_completions(func_type.params(), partial_args).context("no completions")?;
-        Ok(completions
-            .candidates()
-            .map(|c| format!("{partial_call}{c}"))
-            .collect())
+        Ok(completions.candidates().map(|c| c.to_string()).collect())
     }
 }
