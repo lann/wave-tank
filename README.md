@@ -11,15 +11,3 @@ hello-world(false, none) -> "Hello, world!"
 $ cargo run -- example.wasm 'hello-world(true, "README")'
 hello-world(true, some("README")) -> "Goodbye, README!"
 ```
-
-## Completion Demo
-
-> Making this work reliably with bash completion has proven...difficult.
-
-```console
-$ cargo run -- example.wasm --complete hello
-hello-world
-$ cargo run -- example.wasm --complete 'hello-world('
-hello-world(true
-hello-world(false
-```
